@@ -1,0 +1,47 @@
+service: xana-prod-media-processing
+frameworkVersion: "2"
+
+provider:
+  name: aws
+  stackName: xana-media-handler
+  stage: prod
+  region: ap-southeast-1
+  lambdaHashingVersion: 20201221
+
+  iam:
+    role: arn:aws:iam::845847047647:role/mohneesh-transcoder-role-for-lambda
+
+  environment:
+    #    variable1: value1
+    # ACCESS_KEY_ID: AKIA4J4DJVXPY3ZJFXNS
+    # ACCESS_SECRET: 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
+# you can add packaging information here
+package:
+  #  individually: true
+  excludeDevDependencies: true
+  patterns:
+    # - "handler.js"
+    # - "!node_modules/**"
+    # - "!*.json"
+  #    - '!exclude-me-dir/**'
+  #    - include-me.js
+  #    - include-me-dir/**
+
+functions:
+  xana-prod-create-thumbnail:
+    name: xana-prod-create-thumbnail
+    runtime: nodejs14.x
+    memorySize: 2048
+    description: This lambda cretes thumbnails from videos for serving in XANA application
+    handler: index.handler
+    events:
+      - s3:
+        bucket: xana-prod-item
+        event: s3:ObjectCreated:*
+        rules:
+          - prefix: xanaprod/input/videos/
+    timeout: 180
+    layers:
+      - arn:aws:lambda:ap-southeast-1:845847047647:layer:ffmpeg:1
+    package:
+      individually: true

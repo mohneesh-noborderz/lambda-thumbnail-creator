@@ -7,6 +7,7 @@ module.exports = async (triggerBucketName, videoFileName) => {
         triggerBucketName,
         videoFileName
     );
+    // console.log({downloadResult});
     const videoAsBuffer = downloadResult.Body;
     const tmpVideoFilePath = await saveFileToTmpDirectory(videoAsBuffer);
 

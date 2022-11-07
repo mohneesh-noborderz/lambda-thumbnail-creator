@@ -3,13 +3,14 @@ const path = require("path");
 const doesFileExist = require("./does-file-exist");
 const downloadVideoToTmpDirectory = require("./get-video-from-s3");
 const generateThumbnailsFromVideo = require("./create-thumb-from-video");
+const { getObjectTags } = require("./get-video-tags.js");
 const AWS = require("aws-sdk");
 
 const THUMBNAILS_TO_CREATE = 1;
 
 const snsParams = {
     Message: "",
-    TopicArn: "arn:aws:sns:us-east-1:845847047647:dev-xana-make-thumb",
+    TopicArn: "arn:aws:sns:us-east-1:845847047647:xana-notify-thumb-creation",
 };
 
 const SNS = new AWS.SNS({ apiVersion: "2010-03-31" });
@@ -33,7 +34,19 @@ exports.handler = async (event) => {
             );
             if (isThumb) {
                 console.log({ isThumb });
-                snsParams.Message = `thumbnail is created for ${videoFileName}`;
+
+                const tagsets = await getObjectTags(
+                    triggerBucketName,
+                    videoFileName
+                );
+
+                const msg = {
+                    source: "thumbnail-creator",
+                    ...tagsets,
+                    file: videoFileName.split("/").pop(),
+                };
+
+                snsParams.Message = JSON.stringify(msg);
                 const publishTextPromise = await SNS.publish(
                     snsParams
                 ).promise();
@@ -51,7 +64,7 @@ exports.handler = async (event) => {
 const extractParams = (event) => {
     const videoFileName = decodeURIComponent(
         event.Records[0].s3.object.key
-    ).replace(/\+/g, " ");
+    ).replace(/\+/g, "");
     const triggerBucketName = event.Records[0].s3.bucket.name;
 
     return { videoFileName, triggerBucketName };

@@ -23,20 +23,29 @@ module.exports = async (tmpVideoPath, numberOfThumbnails, videoFileName) => {
     //         console.log(thumbres);
     //     }
     // }
-
-    const tmpThumbnailPath = await this.createImageFromVideo(tmpVideoPath, 0);
-    console.log("generated temp file", tmpThumbnailPath);
-    if (doesFileExist(tmpThumbnailPath)) {
-        const nameOfImageToCreate = generateNameOfImageToUpload(
-            videoFileName,
+    try {
+        const tmpThumbnailPath = await this.createImageFromVideo(
+            tmpVideoPath,
             0
         );
-        console.log({ nameOfImageToCreate });
-        const thumbres = await uploadFileToS3(
-            tmpThumbnailPath,
-            nameOfImageToCreate
-        );
-        console.log(thumbres);
+        // generateRandomTimes(tmpVideoPath,0)
+        console.log("generated temp file", tmpThumbnailPath);
+        if (doesFileExist(tmpThumbnailPath)) {
+            const nameOfImageToCreate = generateNameOfImageToUpload(
+                videoFileName,
+                0
+            );
+            console.log({ nameOfImageToCreate });
+            const thumbres = await uploadFileToS3(
+                tmpThumbnailPath,
+                nameOfImageToCreate
+            );
+            console.log(thumbres);
+            return true;
+        }
+    } catch (error) {
+        console.log(error);
+        return false;
     }
 };
 
@@ -79,19 +88,24 @@ const getVideoDuration = (tmpVideoPath) => {
     const ffprobe = spawnSync(ffprobePath, [
         "-v",
         "error",
+        "-select_streams",
+        "v:0",
         "-show_entries",
-        "format=duration",
+        // "format=duration",
+        "stream=duration,codec_name,codec_long_name,codec_tag_string",
         "-of",
         "default=nw=1:nk=1",
         tmpVideoPath,
     ]);
+
+    console.log("ffprobe out", ffprobe.stdout.toString());
 
     return Math.floor(ffprobe.stdout.toString());
 };
 
 exports.createImageFromVideo = (tmpVideoPath, targetSecond) => {
     console.log({ tmpVideoPath, targetSecond });
-    const tmpThumbnailPath = generateThumbnailPath(targetSecond);
+    const tmpThumbnailPath = this.generateThumbnailPath(targetSecond);
     // console.log({ tmpThumbnailPath });
     const ffmpegParams = createFfmpegParams(
         tmpVideoPath,
@@ -135,7 +149,9 @@ const generateNameOfImageToUpload = (videoFileName, i) => {
     const ext = path.extname(videoFileName);
     const strippedExtension = videoFileName
         .replace(ext, "")
-        .replace("input/videos", "thumbnails");
+        .replace("input/", "")
+        .replace("videos", "thumbnails")
+        .replace("convert", "thumbnails");
     return `${strippedExtension}.000000${i}.jpg`;
 };
 
