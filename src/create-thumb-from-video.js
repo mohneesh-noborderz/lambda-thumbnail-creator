@@ -24,7 +24,7 @@ module.exports = async (tmpVideoPath, numberOfThumbnails, videoFileName) => {
     //     }
     // }
 
-    const tmpThumbnailPath = await createImageFromVideo(tmpVideoPath, 0);
+    const tmpThumbnailPath = await this.createImageFromVideo(tmpVideoPath, 0);
     console.log("generated temp file", tmpThumbnailPath);
     if (doesFileExist(tmpThumbnailPath)) {
         const nameOfImageToCreate = generateNameOfImageToUpload(
@@ -89,7 +89,7 @@ const getVideoDuration = (tmpVideoPath) => {
     return Math.floor(ffprobe.stdout.toString());
 };
 
-const createImageFromVideo = (tmpVideoPath, targetSecond) => {
+exports.createImageFromVideo = (tmpVideoPath, targetSecond) => {
     console.log({ tmpVideoPath, targetSecond });
     const tmpThumbnailPath = generateThumbnailPath(targetSecond);
     // console.log({ tmpThumbnailPath });
@@ -104,7 +104,7 @@ const createImageFromVideo = (tmpVideoPath, targetSecond) => {
     return tmpThumbnailPath;
 };
 
-const generateThumbnailPath = (targetSecond) => {
+exports.generateThumbnailPath = (targetSecond) => {
     const tmpThumbnailPathTemplate = "/tmp/thumbnail-{HASH}-{num}.jpg";
     const uniqueThumbnailPath = generateTmpFilePath(tmpThumbnailPathTemplate);
     const thumbnailPathWithNumber = uniqueThumbnailPath.replace(
