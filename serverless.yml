@@ -42,6 +42,6 @@ functions:
           - prefix: xanaprod/input/videos/
     timeout: 180
     layers:
-      - arn:aws:lambda:ap-southeast-1:845847047647:layer:ffmpeg:1
+      - arn:aws:lambda:ap-southeast-1:845847047647:layer:ffmpeg:2
     package:
       individually: true
